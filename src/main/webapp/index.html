@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ToDo List Application</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link href="img/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="css/index.css" rel="stylesheet">
+    <script>
+        $(document).ready(function () {
+            refreshTodoList();
+        });
+
+        function updateTaskVisibility() {
+            const showAll = document.querySelector('#showAll').checked;
+            let table = document.querySelector('#table tbody');
+
+            for (let row of table.rows) {
+                row.hidden = !showAll && row.lastChild.previousSibling.lastChild.checked;
+            }
+        }
+
+        function refreshTodoList() {
+            $("#loading-indicator").show();
+            $.ajax({
+                type: 'GET',
+                url: 'tasks',
+                dataType: 'json'
+            }).done(function (data) {
+                $('#table tbody tr').remove();
+                for (let i = 0; i < data.length; i++) {
+                    addRow(data[i]);
+                }
+                $("#loading-indicator").hide();
+            }).fail(function (error) {
+                $("#loading-indicator").hide();
+                console.log('Error in refreshTodoList: ' + error);
+            });
+        }
+
+        function validate() {
+
+            if ($('#desc').val() === '') {
+                alert('Заполните описание задачи');
+                return false;
+            }
+
+            return true;
+        }
+
+        function addRow(task) {
+            $('#table tbody').append(
+                '<tr ' + ((!document.querySelector('#showAll').checked && task.done === true) ? "hidden" : "") + '>' +
+                '<td>' + task.desc + '</td>' +
+                '<td>' + new Date(task.created).toLocaleString("ru-RU") + '</td>' +
+                '<td>' +
+                '   <input onclick="changeTaskStateAjax(this)" data-id="' + task.id + '" type="checkbox" ' + (task.done === true ? "checked" : "") + '>' +
+                '</td><td><img class="delete-button" src="img/remove.svg" onclick="deleteTaskAjax(this)" data-id="' + task.id + '" alt="del"></td></tr>'
+            );
+        }
+
+        function addTaskAjax() {
+            if (validate()) {
+                $.ajax({
+                    type: 'PUT',
+                    url: 'tasks',
+                    data: JSON.stringify({desc: $('#desc').val()}),
+                    dataType: 'json'
+                }).done(data => {
+                    addRow(data);
+                    $('#desc').val("");
+                }).fail((e) =>
+                    console.log(e)
+                )
+            }
+        }
+
+        function changeTaskStateAjax(el) {
+            $("#loading-indicator").show();
+            $.ajax({
+                type: 'PUT',
+                url: 'tasks/' + el.dataset.id,
+                data: JSON.stringify({done: el.checked}),
+                dataType: 'json'
+            }).done(data => {
+                $("#loading-indicator").hide();
+                el.parentElement.parentElement.hidden = !document.querySelector('#showAll').checked && data.done;
+            }).fail((e) => {
+                    $("#loading-indicator").hide();
+                    updateTaskVisibility();
+                    console.log(e);
+                }
+            )
+        }
+
+        function deleteTaskAjax(el) {
+            if(confirm("Вы действительно хотите удалить задачу? ")){
+                $("#loading-indicator").show();
+                $.ajax({
+                    type: 'DELETE',
+                    url: 'tasks/' + el.dataset.id
+                }).done(data => {
+                    $("#loading-indicator").hide();
+                    $(`input[data-id="${data}"]`)[0].parentElement.parentElement.remove();
+                }).fail((e) => {
+                        $("#loading-indicator").hide();
+                        updateTaskVisibility();
+                        console.log(e);
+                    }
+                )
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <h3>Новая задача</h3>
+    <form action="#" class="form-horizontal">
+        <div class="form-group">
+            <label class="control-label col-sm-1" for="desc">Описание:</label>
+            <div class="col-sm-11">
+                <textarea class="form-control" id="desc" rows="5"></textarea>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-default col-sm-offset-1 col-1"
+                    onclick="addTaskAjax();">Добавить задачу
+            </button>
+        </div>
+    </form>
+
+    <h3>Список задач</h3>
+    <p id="showAllWrapper"><label for="showAll">Показать все задачи<input id="showAll" onclick="updateTaskVisibility()"
+                                                                          type="checkbox"></label>
+        <br>
+        <button class="ui-button ui-icon-refresh" id="refresh" onclick="refreshTodoList()">Обновить список</button>
+    </p>
+    <div id="tableWrapper">
+        <img alt="LOADING" class="hid" id="loading-indicator" src="img/loader.gif"/>
+        <table class="table" id="table">
+            <thead>
+            <tr>
+                <th>Описание задачи</th>
+                <th>Дата создания</th>
+                <th>Выполнено</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+body {
+    background-color: lightyellow;
+}
+
+.container-fluid {
+    min-width: 400px;
+    max-width: 1010px;
+    margin-top: 1em;
+}
+
+h3 {
+    text-align: center;
+}
+
+#showAllWrapper {
+    text-align: right;
+}
+
+#tableWrapper{
+    position: relative;
+    overflow: auto;
+    height: 1000px;
+    background: 45% 50% no-repeat url("../img/note.png") lightyellow;
+    background-position-x: 10px;
+    background-size: cover;
+}
+
+#loading-indicator {
+    position: absolute;
+    left: 50%;
+    top: 100px;
+}
+
+.vis {
+    display: block;
+}
+
+.hid {
+    display: none;
+}
+
+.delete-button {
+    height: 2em;
+    transform: rotateZ(45deg);
+    transition: transform 200ms ease-in;
+}
+.delete-button:hover {
+    transform: rotateZ(0);
+    cursor: pointer;
+}
