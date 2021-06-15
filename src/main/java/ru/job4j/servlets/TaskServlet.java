@@ -27,6 +27,24 @@ public class TaskServlet extends HttpServlet {
     }
 
     @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+
+        JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
+
+        if (req.getRequestURI().endsWith("/tasks")) {                        // new task
+            Task task = new Task();
+            task.setId(0);
+            task.setDesc(object.getString("desc"));
+
+            task = PostgreHbnStore.instOf().add(task);
+            resp.getWriter().print(new JSONObject(task));
+        } else {                                           // update task
+            resp.setStatus(400);
+        }
+    }
+
+    @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 
@@ -38,30 +56,24 @@ public class TaskServlet extends HttpServlet {
 
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
-        if (strTaskCode.isEmpty()) {                        // new task
-            Task task = new Task();
-            task.setId(0);
-            task.setDesc(object.getString("desc"));
-
-            task = PostgreHbnStore.instOf().add(task);
-            resp.getWriter().print(new JSONObject(task));
-        } else {                                           // update task
-            try {
-                Task task = PostgreHbnStore.instOf().findById(Integer.parseInt(strTaskCode));
-                if (task != null) {
-                    if (object.has("desc")) {
-                        task.setDesc(object.getString("desc"));
-                    }
-                    if (object.has("done")) {
-                        task.setDone(object.getBoolean("done"));
-                    }
-                    PostgreHbnStore.instOf().update(task);
-                    resp.getWriter().print(new JSONObject(task));
+        try {
+            Task task = PostgreHbnStore.instOf().findById(Integer.parseInt(strTaskCode));
+            if (task != null) {
+                if (object.has("desc")) {
+                    task.setDesc(object.getString("desc"));
                 }
-            } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
-                resp.setStatus(400);
+                if (object.has("done")) {
+                    task.setDone(object.getBoolean("done"));
+                }
+                PostgreHbnStore.instOf().update(task);
+                resp.getWriter().print(new JSONObject(task));
             }
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            resp.setStatus(400);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            resp.setStatus(500);
         }
     }
 
