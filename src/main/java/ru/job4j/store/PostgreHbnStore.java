@@ -2,12 +2,14 @@ package ru.job4j.store;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import ru.job4j.model.Task;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,71 +29,55 @@ public class PostgreHbnStore implements Store {
         return Lazy.INST;
     }
 
+    private <T> T tx(final Function<Session, T> command) {
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
+        try {
+            T rsl = command.apply(session);
+            tx.commit();
+            return rsl;
+        } catch (final Exception e) {
+            session.getTransaction().rollback();
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+
     @Override
     public List<Task> findAllTasks() {
-        List<Task> result = null;
-        try {
-            Session session = sf.openSession();
-            session.beginTransaction();
-            result = session.createQuery("from Task order by created").list();
-            session.getTransaction().commit();
-            session.close();
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
-        }
-        return result;
+        return this.tx(
+                session -> session.createQuery("from Task order by created", Task.class).list()
+        );
     }
 
     @Override
     public Task add(Task task) {
-        try {
-            Session session = sf.openSession();
-            session.beginTransaction();
-            session.save(task);
-            session.getTransaction().commit();
-            session.close();
-            return task;
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
-            return null;
-        }
+        this.tx(session -> session.save(task));
+        return task;
     }
 
     @Override
     public void update(Task task) {
-        try {
-            Session session = sf.openSession();
-            session.beginTransaction();
+        this.tx(session -> {
             session.update(task);
-            session.getTransaction().commit();
-            session.close();
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
-        }
+            return null;
+        });
     }
 
     @Override
     public void delete(Integer id) {
-        try {
-            Session session = sf.openSession();
-            session.beginTransaction();
-            Task task = new Task();
-            task.setId(id);
-            session.delete(task);
-            session.getTransaction().commit();
-            session.close();
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
-        }
+        this.tx(session -> {
+            session.delete(session.get(Task.class, id));
+            return null;
+        });
     }
 
     @Override
     public Task findById(Integer id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Task result = session.get(Task.class, id);
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(
+                session -> session.find(Task.class, id)
+        );
     }
 }
