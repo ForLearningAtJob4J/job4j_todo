@@ -7,7 +7,7 @@ function updateTaskVisibility() {
     let table = document.querySelector('#table tbody');
 
     for (let row of table.rows) {
-        row.hidden = !showAll && row.lastChild.previousSibling.lastChild.checked;
+        row.hidden = !showAll && row.lastChild.previousSibling.previousSibling.lastChild.checked;
     }
 }
 
@@ -45,8 +45,9 @@ function addRow(task) {
         '<td>' + task.desc + '</td>' +
         '<td>' + new Date(task.created).toLocaleString("ru-RU") + '</td>' +
         '<td>' +
-        '   <input onclick="changeTaskStateAjax(this)" data-id="' + task.id + '" type="checkbox" ' + (task.done === true ? "checked" : "") + '>' +
-        '</td><td><img class="delete-button" src="img/remove.svg" onclick="deleteTaskAjax(this)" data-id="' + task.id + '" alt="del"></td></tr>'
+        '   <input onclick="changeTaskStateAjax(this)" data-id="' + task.id + '" type="checkbox" ' + (task.done === true ? "checked" : "") + '></td>' +
+        '<td>' + task.user.name + '</td>' +
+        '<td><img class="delete-button" src="img/remove.svg" onclick="deleteTaskAjax(this)" data-id="' + task.id + '" alt="del"></td></tr>'
     );
 }
 
@@ -60,8 +61,9 @@ function addTaskAjax() {
         }).done(data => {
             addRow(data);
             $('#desc').val("");
-        }).fail((e) =>
-            console.log(e)
+        }).fail((e) => {
+                console.log(e);
+            }
         )
     }
 }
@@ -72,14 +74,19 @@ function changeTaskStateAjax(el) {
         type: 'PUT',
         url: 'tasks/' + el.dataset.id,
         data: JSON.stringify({done: el.checked}),
-        dataType: 'json'
+        dataType: 'json',
+        statusCode: {
+            403: () => {
+                alert('Отметка выполнения запрещена! Задача принадлежит другому пользователю!');
+                refreshTodoList();
+            }
+        }
     }).done(data => {
         $("#loading-indicator").hide();
         el.parentElement.parentElement.hidden = !document.querySelector('#showAll').checked && data.done;
     }).fail((e) => {
-            $("#loading-indicator").hide();
-            updateTaskVisibility();
             console.log(e);
+            refreshTodoList();
         }
     )
 }
@@ -89,14 +96,16 @@ function deleteTaskAjax(el) {
         $("#loading-indicator").show();
         $.ajax({
             type: 'DELETE',
-            url: 'tasks/' + el.dataset.id
+            url: 'tasks/' + el.dataset.id,
+            statusCode: {
+                403: () => alert('Удаление запрещено! Задача принадлежит другому пользователю!')
+            }
         }).done(data => {
             $("#loading-indicator").hide();
             $(`input[data-id="${data}"]`)[0].parentElement.parentElement.remove();
         }).fail((e) => {
-                $("#loading-indicator").hide();
-                updateTaskVisibility();
                 console.log(e);
+                refreshTodoList();
             }
         )
     }

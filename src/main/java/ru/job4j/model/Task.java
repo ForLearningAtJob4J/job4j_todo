@@ -3,11 +3,13 @@ package ru.job4j.model;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
 @Table (name = "item")
-public class Task {
+public class Task implements IdOwner, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -18,31 +20,37 @@ public class Task {
     private Timestamp created;
     private boolean done;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
     public Task() {
 
     }
 
-    public Task(int id, String description, Timestamp created, boolean done) {
+    public Task(int id, String description, Timestamp created, boolean done, User user) {
         this.id = id;
         this.desc = description;
         this.created = created;
         this.done = done;
+        this.user = user;
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public Task setId(int id) {
         this.id = id;
+        return this;
     }
 
     public String getDesc() {
         return desc;
     }
 
-    public void setDesc(String description) {
+    public Task setDesc(String description) {
         this.desc = description;
+        return this;
     }
 
     public Timestamp getCreated() {
@@ -57,7 +65,34 @@ public class Task {
         return done;
     }
 
-    public void setDone(boolean done) {
+    public Task setDone(boolean done) {
         this.done = done;
+        return this;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Task setUser(User user) {
+        this.user = user;
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Task task = (Task) o;
+        return id == task.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

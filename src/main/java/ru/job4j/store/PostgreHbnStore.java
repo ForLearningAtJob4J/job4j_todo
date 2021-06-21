@@ -6,7 +6,9 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import ru.job4j.model.IdOwner;
 import ru.job4j.model.Task;
+import ru.job4j.model.User;
 
 import java.util.*;
 import java.util.function.Function;
@@ -53,31 +55,39 @@ public class PostgreHbnStore implements Store {
     }
 
     @Override
-    public Task add(Task task) {
-        this.tx(session -> session.save(task));
-        return task;
-    }
-
-    @Override
-    public void update(Task task) {
-        this.tx(session -> {
-            session.update(task);
-            return null;
-        });
-    }
-
-    @Override
-    public void delete(Integer id) {
-        this.tx(session -> {
-            session.delete(session.get(Task.class, id));
-            return null;
-        });
-    }
-
-    @Override
-    public Task findById(Integer id) {
+    public User findUserByEmail(String email) {
         return this.tx(
-                session -> session.find(Task.class, id)
+                session -> session.createQuery("from User where email = :email", User.class).setParameter("email", email).stream().findFirst().orElse(null)
+        );
+    }
+
+    @Override
+    public <T> T add(T subject) {
+        this.tx(session -> session.save(subject.getClass().getName(), subject));
+        return subject;
+    }
+
+    @Override
+    public <T> void update(T subject) {
+        this.tx(session -> {
+            session.update(subject.getClass().getName(), subject);
+            return null;
+        });
+    }
+
+    @Override
+    public <T extends IdOwner> void delete(T subject) {
+        this.tx(session -> {
+            T found = (T) session.get(subject.getClass(), subject.getId());
+            session.delete(found);
+            return found;
+        });
+    }
+
+    @Override
+    public <T extends IdOwner> T findById(T subject) {
+        return this.tx(
+                session -> session.find((Class<T>) subject.getClass(), subject.getId())
         );
     }
 }

@@ -3,6 +3,7 @@ package ru.job4j.servlets;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import ru.job4j.model.Task;
+import ru.job4j.model.User;
 import ru.job4j.store.PostgreHbnStore;
 
 import javax.servlet.ServletException;
@@ -28,26 +29,22 @@ public class TaskServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
-        if (req.getRequestURI().endsWith("/tasks")) {                        // new task
-            Task task = new Task();
-            task.setId(0);
-            task.setDesc(object.getString("desc"));
-
-            task = PostgreHbnStore.instOf().add(task);
+        if (req.getRequestURI().endsWith("/tasks")) {
+            Task task = PostgreHbnStore.instOf().add(new Task()
+                    .setId(0)
+                    .setDesc(object.getString("desc"))
+                    .setUser((User) req.getSession().getAttribute("user"))
+            );
             resp.getWriter().print(new JSONObject(task));
-        } else {                                           // update task
+        } else {
             resp.setStatus(400);
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-
         String rURI = req.getRequestURI();
         String strTaskCode = rURI.substring(rURI.lastIndexOf("/tasks") + 6);
         if (strTaskCode.startsWith("/")) {
@@ -57,13 +54,20 @@ public class TaskServlet extends HttpServlet {
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
         try {
-            Task task = PostgreHbnStore.instOf().findById(Integer.parseInt(strTaskCode));
+            Task task = PostgreHbnStore.instOf().findById(new Task().setId(Integer.parseInt(strTaskCode)));
             if (task != null) {
+                if (!(req.getSession().getAttribute("user")).equals(task.getUser())) {
+                    resp.setStatus(403);
+                    return;
+                }
                 if (object.has("desc")) {
                     task.setDesc(object.getString("desc"));
                 }
                 if (object.has("done")) {
                     task.setDone(object.getBoolean("done"));
+                }
+                if (object.has("user")) {
+                    task.setUser((User) object.get("user"));
                 }
                 PostgreHbnStore.instOf().update(task);
                 resp.getWriter().print(new JSONObject(task));
@@ -79,8 +83,6 @@ public class TaskServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-
         String rURI = req.getRequestURI();
         String strTaskCode = rURI.substring(rURI.lastIndexOf("/tasks") + 6);
         if (strTaskCode.startsWith("/")) {
@@ -89,8 +91,13 @@ public class TaskServlet extends HttpServlet {
 
         if (!strTaskCode.isEmpty()) {
             try {
-                PostgreHbnStore.instOf().delete(Integer.parseInt(strTaskCode));
-                resp.getWriter().print(strTaskCode);
+                Task task = PostgreHbnStore.instOf().findById(new Task().setId(Integer.parseInt(strTaskCode)));
+                if ((req.getSession().getAttribute("user")).equals(task.getUser())) {
+                    PostgreHbnStore.instOf().delete(new Task().setId(Integer.parseInt(strTaskCode)));
+                    resp.getWriter().print(strTaskCode);
+                } else {
+                    resp.setStatus(403);
+                }
             } catch (NumberFormatException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
                 resp.setStatus(400);

@@ -1,17 +1,21 @@
 package ru.job4j.store;
 
+import ru.job4j.model.IdOwner;
 import ru.job4j.model.Task;
+import ru.job4j.model.User;
 
 import java.util.List;
 
 public interface Store {
     List<Task> findAllTasks();
 
-    Task add(Task task);
+    User findUserByEmail(String email);
 
-    void update(Task task);
+    <T> T add(T subject);
 
-    void delete(Integer id);
+    <T> void update(T subject);
 
-    Task findById(Integer id);
+    <T extends IdOwner> void delete(T subject);
+
+    <T extends IdOwner> T findById(T subject);
 }
