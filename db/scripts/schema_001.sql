@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS "user"
 (
     id   SERIAL PRIMARY KEY,
     name VARCHAR(2000),
-    email VARCHAR(254),
+    email VARCHAR(254) UNIQUE,
     password TEXT
 );
 

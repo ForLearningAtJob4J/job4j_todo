@@ -6,7 +6,6 @@
     <title>ToDo List Application</title>
     <link href="img/favicon.ico" rel="icon" type="image/x-icon">
     <!-- Required meta tags -->
-    <%--    <meta charset="utf-8">--%>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -25,6 +24,7 @@
         $(document).ready(function () {
             $("#loading-indicator").hide();
         });
+
         function validate() {
             let message = '';
             if ($('#email').val() === '') {
@@ -50,16 +50,14 @@
 
     <div class="row">
         <div class="card" style="width: 100%">
-            <%
-                if (request.getAttribute("error") != null) {
-                    out.println("<div style=\"color: red;\">" + request.getAttribute("error") + "</div>");
-                }
-            %>
+            <div style="color: red;">
+                ${requestScope.error}
+            </div>
             <div class="card-header">
-                Авторизация | <a href="<%=request.getContextPath()%>/reg.do?op=edit&id=0">Регистрация</a>
+                Авторизация | <a href="reg">Регистрация</a>
             </div>
             <div class="card-body">
-                <form action="<%=request.getContextPath()%>/auth.do" method="post">
+                <form action="auth" method="post">
                     <div class="form-group">
                         <label for="email">Почта</label>
                         <input id="email" type="text" class="form-control" name="email">

@@ -1,4 +1,4 @@
-package ru.job4j.servlets;
+package ru.job4j.services;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,15 +30,21 @@ public class TaskServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding("UTF-8");
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
         if (req.getRequestURI().endsWith("/tasks")) {
-            Task task = PostgreHbnStore.instOf().add(new Task()
-                    .setId(0)
-                    .setDesc(object.getString("desc"))
-                    .setUser((User) req.getSession().getAttribute("user"))
-            );
-            resp.getWriter().print(new JSONObject(task));
+            try {
+                Task task = PostgreHbnStore.instOf().add(new Task()
+                        .setId(0)
+                        .setDesc(object.getString("desc"))
+                        .setUser((User) req.getSession().getAttribute("user"))
+                );
+                resp.getWriter().print(new JSONObject(task));
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                resp.setStatus(500);
+            }
         } else {
             resp.setStatus(400);
         }
@@ -45,6 +52,7 @@ public class TaskServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding("UTF-8");
         String rURI = req.getRequestURI();
         String strTaskCode = rURI.substring(rURI.lastIndexOf("/tasks") + 6);
         if (strTaskCode.startsWith("/")) {

@@ -66,6 +66,8 @@ function addTaskAjax() {
             }
         )
     }
+    console.log("addTaskAjax().return");
+    return false;
 }
 
 function changeTaskStateAjax(el) {

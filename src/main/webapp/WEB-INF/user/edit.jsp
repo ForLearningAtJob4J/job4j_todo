@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <title>ToDo List Application</title>
-    <link href="../img/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="../../img/favicon.ico" rel="icon" type="image/x-icon">
     <!-- Required meta tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -54,8 +54,9 @@
                 ${title}
             </div>
             <div class="card-body">
-                <form action="<%=request.getContextPath()%>/reg.do?op=edit&id=${user.id}" method="post">
+                <form action="reg" method="post">
                     <div class="form-group">
+                        <input hidden id="id" type="text" class="form-control" name="id" value="${user.id}">
                         <label for="name">Имя</label>
                         <input id="name" type="text" class="form-control" name="name" value="${user.name}">
                         <label for="email">E-mail</label>

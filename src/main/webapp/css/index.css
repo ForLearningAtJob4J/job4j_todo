@@ -36,7 +36,12 @@ h3 {
     transform: rotateZ(45deg);
     transition: transform 200ms ease-in;
 }
+
 .delete-button:hover {
     transform: rotateZ(0);
     cursor: pointer;
+}
+
+.info {
+    text-align: right;
 }

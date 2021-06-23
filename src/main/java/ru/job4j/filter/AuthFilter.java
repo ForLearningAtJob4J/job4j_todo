@@ -18,12 +18,12 @@ public class AuthFilter implements Filter {
         req.setCharacterEncoding("UTF-8");
         HttpServletResponse resp = (HttpServletResponse) sresp;
         String uri = req.getRequestURI();
-        if (uri.endsWith("auth.do") || uri.endsWith("reg.do")) {
+        if (uri.endsWith("auth") || uri.endsWith("reg")) {
             chain.doFilter(sreq, sresp);
             return;
         }
         if (req.getSession().getAttribute("user") == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth.do");
+            resp.sendRedirect("auth");
             return;
         }
         chain.doFilter(sreq, sresp);
