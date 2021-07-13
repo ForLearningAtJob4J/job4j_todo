@@ -22,7 +22,7 @@ public class UserServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        resp.getWriter().println(new JSONArray(PostgreHbnStore.instOf().findAllUsers()));
+        resp.getWriter().println(new JSONArray(PostgreHbnStore.instOf().findAll(User.class)));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         try {
-            PostgreHbnStore.instOf().delete(new User().setId(Integer.parseInt(req.getParameter("id"))));
+            PostgreHbnStore.instOf().deleteById(User.class, Integer.parseInt(req.getParameter("id")));
             req.getSession().setAttribute("user", null);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);

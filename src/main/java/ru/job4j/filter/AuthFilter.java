@@ -18,7 +18,10 @@ public class AuthFilter implements Filter {
         req.setCharacterEncoding("UTF-8");
         HttpServletResponse resp = (HttpServletResponse) sresp;
         String uri = req.getRequestURI();
-        if (uri.endsWith("auth") || uri.endsWith("reg")) {
+        if (uri.endsWith("auth")
+                || uri.endsWith("reg")
+                || uri.endsWith("loader.gif")
+                || uri.endsWith("favicon.ico")) {
             chain.doFilter(sreq, sresp);
             return;
         }

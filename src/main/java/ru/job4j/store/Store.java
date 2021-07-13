@@ -1,16 +1,14 @@
 package ru.job4j.store;
 
-import ru.job4j.model.IdOwner;
-import ru.job4j.model.Task;
 import ru.job4j.model.User;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public interface Store {
-    List<Task> findAllTasks();
+    <T> List<T> findAll(Class<T> cls);
 
-    List<User> findAllUsers();
+    <T> List<T> findAllFetched(Class<T> cls, String prop);
 
     User findUserByEmail(String email);
 
@@ -18,7 +16,7 @@ public interface Store {
 
     <T> void update(T subject) throws SQLException;
 
-    <T extends IdOwner> void delete(T subject);
+    <T> void deleteById(Class<T> cls, int id);
 
-    <T extends IdOwner> T findById(T subject);
+    <T> T getById(Class<T> cls, int id);
 }

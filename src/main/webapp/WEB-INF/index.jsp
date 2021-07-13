@@ -15,21 +15,28 @@
 <body>
 
 <div class="container-fluid">
-        <div class="info">
-            <span>${user.name}</span> | <a class="nav-link" href="auth?op=exit"> Выйти </a>
-        </div>
+    <div class="info">
+        <span>${sessionScope.user.name}</span> | <a class="nav-link" href="auth?op=exit"> Выйти </a>
+    </div>
 
     <h3>Новая задача</h3>
     <form class="form-horizontal">
         <div class="form-group">
-            <label class="control-label col-sm-1" for="desc">Описание:</label>
-            <div class="col-sm-11">
+            <label class="col-form-label col-sm-1" for="desc">Описание:</label>
+            <div class="col-sm-10">
                 <textarea class="form-control" id="desc" rows="5"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-form-label col-sm-1" for="cIds">Категории:</label>
+            <div class="col-sm-5">
+                <select class="form-control" name="cIds" id="cIds" multiple>
+                </select>
             </div>
         </div>
     </form>
     <div>
-        <button class="btn btn-default col-sm-offset-1 col-1"
+        <button class="btn btn-default col-sm-offset-1 col-3"
                 onclick="addTaskAjax()">Добавить задачу
         </button>
     </div>
@@ -46,6 +53,7 @@
             <thead>
             <tr>
                 <th>Описание задачи</th>
+                <th>Категории</th>
                 <th>Дата создания</th>
                 <th>Выполнено</th>
                 <th>Создатель</th>

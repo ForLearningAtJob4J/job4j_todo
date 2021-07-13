@@ -5,11 +5,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Table (name = "item")
-public class Task implements IdOwner, Serializable {
+public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -23,6 +26,22 @@ public class Task implements IdOwner, Serializable {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    final private List<Category> categories = new ArrayList<>();
+
+    public void addCategory(Category category) {
+        this.categories.add(category);
+    }
+
+    public void removeCategory(Category category) {
+        this.categories.remove(category);
+    }
+
+    public List<Category> getCategories() {
+        return Collections.unmodifiableList(categories);
+    }
+
     public Task() {
 
     }

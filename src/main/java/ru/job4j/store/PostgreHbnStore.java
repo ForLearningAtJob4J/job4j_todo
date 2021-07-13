@@ -51,16 +51,16 @@ public class PostgreHbnStore implements Store {
     }
 
     @Override
-    public List<Task> findAllTasks() {
+    public <T> List<T> findAll(Class<T> cls) {
         return this.tx(
-                session -> session.createQuery("from Task order by created", Task.class).list()
+                session -> session.createQuery("from " + cls.getName(), cls).list()
         );
     }
 
-    @Override
-    public List<User> findAllUsers() {
+    @SuppressWarnings("unchecked")
+    public <T> List<T> findAllFetched(Class<T> cls, String prop) {
         return this.tx(
-                session -> session.createQuery("from User", User.class).list()
+                session -> session.createQuery("select distinct tbl from " + cls.getName() + " tbl left join fetch tbl." + prop).list()
         );
     }
 
@@ -92,18 +92,18 @@ public class PostgreHbnStore implements Store {
     }
 
     @Override
-    public <T extends IdOwner> void delete(T subject) {
+    public <T> void deleteById(Class<T> cls, int id) {
         this.tx(session -> {
-            T found = (T) session.get(subject.getClass(), subject.getId());
+            T found = session.get(cls, id);
             session.delete(found);
             return found;
         });
     }
 
     @Override
-    public <T extends IdOwner> T findById(T subject) {
+    public <T> T getById(Class<T> cls, int id) {
         return this.tx(
-                session -> session.find((Class<T>) subject.getClass(), subject.getId())
+                session -> session.get(cls, id)
         );
     }
 }

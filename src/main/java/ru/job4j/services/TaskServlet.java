@@ -2,6 +2,7 @@ package ru.job4j.services;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import ru.job4j.model.Category;
 import ru.job4j.model.Task;
 import ru.job4j.model.User;
 import ru.job4j.store.PostgreHbnStore;
@@ -13,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -25,21 +28,26 @@ public class TaskServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        resp.getWriter().println(new JSONArray(PostgreHbnStore.instOf().findAllTasks()));
+        List<Task> tasks = PostgreHbnStore.instOf().findAllFetched(Task.class, "categories");
+        resp.getWriter().println(new JSONArray(tasks));
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("text/json");
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
         if (req.getRequestURI().endsWith("/tasks")) {
             try {
-                Task task = PostgreHbnStore.instOf().add(new Task()
-                        .setId(0)
-                        .setDesc(object.getString("desc"))
-                        .setUser((User) req.getSession().getAttribute("user"))
-                );
+                Task task = new Task().setId(0).setDesc(object.getString("desc"))
+                        .setUser((User) req.getSession().getAttribute("user"));
+                for (var category: object.getJSONArray("categories")) {
+                    task.addCategory(
+                            PostgreHbnStore.instOf().getById(Category.class, Integer.parseInt(category.toString()))
+                    );
+                }
+                task = PostgreHbnStore.instOf().add(task);
                 resp.getWriter().print(new JSONObject(task));
             } catch (SQLException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
@@ -62,7 +70,7 @@ public class TaskServlet extends HttpServlet {
         JSONObject object = new JSONObject(req.getReader().lines().collect(Collectors.joining()));
 
         try {
-            Task task = PostgreHbnStore.instOf().findById(new Task().setId(Integer.parseInt(strTaskCode)));
+            Task task = PostgreHbnStore.instOf().getById(Task.class, Integer.parseInt(strTaskCode));
             if (task != null) {
                 if (!(req.getSession().getAttribute("user")).equals(task.getUser())) {
                     resp.setStatus(403);
@@ -99,9 +107,9 @@ public class TaskServlet extends HttpServlet {
 
         if (!strTaskCode.isEmpty()) {
             try {
-                Task task = PostgreHbnStore.instOf().findById(new Task().setId(Integer.parseInt(strTaskCode)));
+                Task task = PostgreHbnStore.instOf().getById(Task.class, Integer.parseInt(strTaskCode));
                 if ((req.getSession().getAttribute("user")).equals(task.getUser())) {
-                    PostgreHbnStore.instOf().delete(new Task().setId(Integer.parseInt(strTaskCode)));
+                    PostgreHbnStore.instOf().deleteById(Task.class, Integer.parseInt(strTaskCode));
                     resp.getWriter().print(strTaskCode);
                 } else {
                     resp.setStatus(403);
