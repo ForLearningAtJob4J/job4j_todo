@@ -6,9 +6,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.postgresql.util.PSQLException;
-import ru.job4j.model.IdOwner;
-import ru.job4j.model.Task;
 import ru.job4j.model.User;
 
 import javax.persistence.NoResultException;

@@ -1,6 +1,5 @@
 package ru.job4j.model;
 
-
 import javax.persistence.*;
 
 @Entity

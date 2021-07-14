@@ -1,7 +1,6 @@
 package ru.job4j.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
