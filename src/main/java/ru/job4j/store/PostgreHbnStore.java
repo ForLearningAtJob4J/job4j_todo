@@ -57,10 +57,10 @@ public class PostgreHbnStore implements Store {
         );
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
     public <T> List<T> findAllFetched(Class<T> cls, String prop) {
         return this.tx(
-                session -> session.createQuery("select distinct tbl from " + cls.getName() + " tbl left join fetch tbl." + prop).list()
+                session -> session.createQuery("select distinct tbl from " + cls.getName() + " tbl left join fetch tbl." + prop, cls).list()
         );
     }
 
