@@ -3,11 +3,7 @@ package ru.job4j.model;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table (name = "item")
@@ -18,8 +14,8 @@ public class Task {
 
     @Column(name = "\"desc\"")
     private String desc;
-    @CreationTimestamp
-    private Timestamp created;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
     private boolean done;
 
     @ManyToOne
@@ -42,10 +38,10 @@ public class Task {
     }
 
     public Task() {
-
+        created = new Date(System.currentTimeMillis());
     }
 
-    public Task(int id, String description, Timestamp created, boolean done, User user) {
+    public Task(int id, String description, Date created, boolean done, User user) {
         this.id = id;
         this.desc = description;
         this.created = created;
@@ -71,12 +67,13 @@ public class Task {
         return this;
     }
 
-    public Timestamp getCreated() {
+    public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Timestamp created) {
+    public Task setCreated(Date created) {
         this.created = created;
+        return this;
     }
 
     public boolean isDone() {

@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -42,13 +41,15 @@ public class TaskServlet extends HttpServlet {
             try {
                 Task task = new Task().setId(0).setDesc(object.getString("desc"))
                         .setUser((User) req.getSession().getAttribute("user"));
-                for (var category: object.getJSONArray("categories")) {
+                for (var category : object.getJSONArray("categories")) {
                     task.addCategory(
                             PostgreHbnStore.instOf().getById(Category.class, Integer.parseInt(category.toString()))
                     );
                 }
-                task = PostgreHbnStore.instOf().add(task);
-                resp.getWriter().print(new JSONObject(task));
+                PostgreHbnStore.instOf().add(task);
+                object = new JSONObject(task);
+                object.put("created", task.getCreated().toInstant());
+                resp.getWriter().print(object);
             } catch (SQLException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
                 resp.setStatus(500);
